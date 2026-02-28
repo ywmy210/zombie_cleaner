@@ -1,8 +1,10 @@
 # Zombie Cleaner - 僵尸进程自动检测与清理脚本
 
 [![Test](https://github.com/ywmy210/zombie_cleaner/actions/workflows/test.yml/badge.svg)](https://github.com/ywmy210/zombie_cleaner/actions/workflows/test.yml)
+[![Release](https://github.com/ywmy210/zombie_cleaner/actions/workflows/release.yml/badge.svg)](https://github.com/ywmy210/zombie_cleaner/releases)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Shell Script](https://img.shields.io/badge/Shell-Bash-green.svg)](https://www.gnu.org/software/bash/)
+[![GitHub release](https://img.shields.io/github/release/ywmy210/zombie_cleaner.svg)](https://github.com/ywmy210/zombie_cleaner/releases)
 
 一个用于 Linux 系统的僵尸进程自动检测与清理工具。当僵尸进程数量超过设定阈值时，自动终止其父进程以清理僵尸进程。
 
@@ -23,10 +25,13 @@
 ## 安装
 
 ```bash
-# 克隆或下载脚本
-git clone <repository-url>
+# 方法一：直接下载最新版本
+curl -O https://raw.githubusercontent.com/ywmy210/zombie_cleaner/main/zombie_cleaner.sh
+chmod +x zombie_cleaner.sh
 
-# 添加执行权限
+# 方法二：克隆仓库
+git clone https://github.com/ywmy210/zombie_cleaner.git
+cd zombie_cleaner
 chmod +x zombie_cleaner.sh
 ```
 
