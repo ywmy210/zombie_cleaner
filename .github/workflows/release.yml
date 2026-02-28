@@ -1,0 +1,61 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Get version
+        id: get_version
+        run: echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+
+      - name: Generate changelog
+        id: changelog
+        run: |
+          # 获取上一个 tag
+          PREV_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
+
+          if [ -z "$PREV_TAG" ]; then
+            # 首次发布，获取所有提交
+            COMMITS=$(git log --pretty=format:"- %s" --reverse)
+          else
+            # 获取两个 tag 之间的提交
+            COMMITS=$(git log ${PREV_TAG}..HEAD --pretty=format:"- %s" --reverse)
+          fi
+
+          # 保存到文件以便多行输出
+          echo "changes<<EOF" >> $GITHUB_OUTPUT
+          echo "$COMMITS" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: Release ${{ steps.get_version.outputs.VERSION }}
+          body: |
+            ## 变更内容
+
+            ${{ steps.changelog.outputs.changes }}
+
+            ## 安装
+
+            ```bash
+            # 下载脚本
+            curl -O https://raw.githubusercontent.com/ywmy210/zombie_cleaner/main/zombie_cleaner.sh
+            chmod +x zombie_cleaner.sh
+            sudo ./zombie_cleaner.sh
+            ```
+          files: |
+            zombie_cleaner.sh
+          draft: false
+          prerelease: false
