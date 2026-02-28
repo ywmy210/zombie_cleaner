@@ -80,7 +80,8 @@ test_resource_usage() {
     echo "测试脚本资源占用..."
     
     # 创建测试脚本（模拟主循环但不实际操作）
-    local test_script=$(cat <<'EOF'
+    local test_script
+    test_script=$(cat <<'EOF'
 #!/bin/bash
 for i in {1..100}; do
     ps -eo pid,ppid,stat,comm | awk '$3 ~ /^Z/ {print $1":"$2":"$4}' > /dev/null
@@ -177,10 +178,10 @@ test_stress_scenario() {
         
         # 模拟主脚本的处理逻辑
         declare -A parent_pids
-        while IFS=: read -r zpid ppid _; do
-            [[ -z "$ppid" || "$ppid" == "0" ]] && continue
-            parent_pids["$ppid"]=1
-        done < <(echo "$data")
+    while IFS=: read -r _ ppid _; do
+        [[ -z "$ppid" || "$ppid" == "0" ]] && continue
+        parent_pids["$ppid"]=1
+    done < <(echo "$data")
         
         end_time=$(date +%s.%N)
         duration_ms=$(echo "($end_time - $start_time) * 1000" | bc)
@@ -245,7 +246,8 @@ test_concurrent_execution() {
     echo "测试锁文件机制..."
     
     # 创建临时测试脚本
-    local test_lock_script=$(cat <<'EOF'
+    local test_lock_script
+    test_lock_script=$(cat <<'EOF'
 #!/bin/bash
 LOCK_FILE="/tmp/test_zombie_cleaner.lock"
 
@@ -267,7 +269,7 @@ EOF
     chmod +x /tmp/test_lock.sh
     
     # 同时启动多个实例
-    local results=()
+    local _results
     for i in {1..5}; do
         /tmp/test_lock.sh &
     done
