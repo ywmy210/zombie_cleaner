@@ -178,10 +178,12 @@ test_stress_scenario() {
         
         # 模拟主脚本的处理逻辑
         declare -A parent_pids
-    while IFS=: read -r _ ppid _; do
-        [[ -z "$ppid" || "$ppid" == "0" ]] && continue
-        parent_pids["$ppid"]=1
-    done < <(echo "$data")
+        while IFS=: read -r _ ppid _; do
+            [[ -z "$ppid" || "$ppid" == "0" ]] && continue
+            parent_pids["$ppid"]=1
+        done < <(echo "$data")
+        # 验证处理结果（避免 unused 警告）
+        [[ ${#parent_pids[@]} -ge 0 ]] || true
         
         end_time=$(date +%s.%N)
         duration_ms=$(echo "($end_time - $start_time) * 1000" | bc)
