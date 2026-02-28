@@ -16,7 +16,8 @@ SAFE_PROCESSES="systemd|kthreadd|sshd|cron|systemd-journald"  # 保护进程名
 log() {
     local level=$1
     local msg=$2
-    local timestamp=$(date '+%Y-%m-%d %H:%M:%S')
+    local timestamp
+    timestamp=$(date '+%Y-%m-%d %H:%M:%S')
     echo "[$timestamp] [$level] $msg" | tee -a "$LOG_FILE"
     logger -t "zombie_cleaner" "[$level] $msg" 2>/dev/null
 }
@@ -49,8 +50,10 @@ trap cleanup EXIT INT TERM
 # ========== 检测僵尸进程 ==========
 detect_zombies() {
     # 获取僵尸进程列表：PID, PPID, COMMAND
-    local zombies=$(ps -eo pid,ppid,stat,comm | awk '$3 ~ /^Z/ {print $1":"$2":"$4}')
-    local count=$(echo "$zombies" | grep -c '^[0-9]' || echo 0)
+    local zombies
+    local count
+    zombies=$(ps -eo pid,ppid,stat,comm | awk '$3 ~ /^Z/ {print $1":"$2":"$4}')
+    count=$(echo "$zombies" | grep -c '^[0-9]' || echo 0)
 
     # 输出格式：第一行数量，后续为僵尸进程列表
     echo "$count"
@@ -62,9 +65,12 @@ main() {
     log "INFO" "========== 僵尸进程检测开始 =========="
     
     # 检测僵尸进程
-    local detect_output=$(detect_zombies)
-    local zombie_count=$(echo "$detect_output" | head -1)
-    local zombie_list=$(echo "$detect_output" | tail -n +2)
+    local detect_output
+    local zombie_count
+    local zombie_list
+    detect_output=$(detect_zombies)
+    zombie_count=$(echo "$detect_output" | head -1)
+    zombie_list=$(echo "$detect_output" | tail -n +2)
     log "INFO" "当前僵尸进程数量: $zombie_count"
     
     if [[ $zombie_count -le $ZOMBIE_THRESHOLD ]]; then
@@ -76,11 +82,11 @@ main() {
     
     # 提取唯一父进程 PID 列表
     declare -A parent_pids
-    while IFS=: read -r zpid ppid cmd; do
+    while IFS=: read -r zpid ppid _; do
         [[ -z "$ppid" || "$ppid" == "0" ]] && continue
         
         # 跳过保护进程
-        if [[ " ${SAFE_PIDS[@]} " =~ " $ppid " ]]; then
+        if [[ " $SAFE_PIDS " == *" $ppid "* ]]; then
             log "SKIP" "跳过保护 PID $ppid (僵尸: $zpid)"
             continue
         fi
@@ -116,7 +122,8 @@ main() {
             log "INFO" "已发送 SIGTERM 到 PID $ppid"
             
             # 等待 5 秒观察是否退出
-            for i in {1..5}; do
+        local j
+        for j in {1..5}; do
                 if ! kill -0 "$ppid" 2>/dev/null; then
                     log "SUCCESS" "父进程 PID $ppid 已退出，其僵尸进程将被 systemd 回收"
                     continue 2
@@ -138,8 +145,10 @@ main() {
     
     # 验证清理效果
     sleep 2
-    local detect_output2=$(detect_zombies)
-    local new_count=$(echo "$detect_output2" | head -1)
+    local detect_output2
+    local new_count
+    detect_output2=$(detect_zombies)
+    new_count=$(echo "$detect_output2" | head -1)
     log "INFO" "清理后僵尸进程数量: $new_count"
     
     if [[ $new_count -lt $zombie_count ]]; then
