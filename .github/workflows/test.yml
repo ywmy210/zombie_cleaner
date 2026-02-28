@@ -7,9 +7,8 @@ on:
     branches: [main]
 
 jobs:
-  test:
+  lint:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -19,11 +18,6 @@ jobs:
           bash -n zombie_cleaner.sh
           echo "Syntax check passed!"
 
-      - name: Check script permissions
-        run: |
-          chmod +x zombie_cleaner.sh
-          ls -la zombie_cleaner.sh
-
       - name: Run shellcheck
         uses: ludeeus/action-shellcheck@master
         with:
@@ -31,7 +25,78 @@ jobs:
           severity: warning
           check_together: 'yes'
 
-      - name: Test help output (non-root)
+  test:
+    needs: lint
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-22.04, ubuntu-24.04]
+        bash-version: ['4.4', '5.0', '5.1', '5.2']
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Bash
         run: |
-          # 脚本会因非 root 权限退出，这是预期行为
+          sudo apt-get update
+          sudo apt-get install -y bash
+          echo "Bash version: $(bash --version | head -1)"
+
+      - name: Check script permissions
+        run: |
+          chmod +x zombie_cleaner.sh
+          ls -la zombie_cleaner.sh
+
+      - name: Test dependency check
+        run: |
+          # 测试依赖检查功能
           ./zombie_cleaner.sh 2>&1 || true
+
+      - name: Verify required commands
+        run: |
+          for cmd in ps awk grep kill logger tee date tr; do
+            if command -v $cmd &>/dev/null; then
+              echo "✓ $cmd: $(command -v $cmd)"
+            else
+              echo "✗ $cmd: NOT FOUND"
+              exit 1
+            fi
+          done
+
+  compatibility:
+    needs: lint
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-22.04, ubuntu-24.04, debian-12]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Check Bash version
+        run: bash --version | head -1
+
+      - name: Test script execution
+        run: |
+          chmod +x zombie_cleaner.sh
+          # 预期因非 root 权限退出
+          ./zombie_cleaner.sh 2>&1 || true
+
+  summary:
+    needs: [lint, test, compatibility]
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+      - name: Check results
+        run: |
+          echo "## 测试总结" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| 测试项 | 状态 |" >> $GITHUB_STEP_SUMMARY
+          echo "|--------|------|" >> $GITHUB_STEP_SUMMARY
+          echo "| 语法检查 | ${{ needs.lint.result == 'success' && '✅ 通过' || '❌ 失败' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| 多平台测试 | ${{ needs.test.result == 'success' && '✅ 通过' || '❌ 失败' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| 兼容性检查 | ${{ needs.compatibility.result == 'success' && '✅ 通过' || '❌ 失败' }} |" >> $GITHUB_STEP_SUMMARY

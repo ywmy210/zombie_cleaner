@@ -12,6 +12,9 @@ LOCK_FILE="/var/run/zombie_cleaner.lock"
 SAFE_PIDS="1"                      # 保护 PID（避免杀死 systemd/init）
 SAFE_PROCESSES="systemd|kthreadd|sshd|cron|systemd-journald"  # 保护进程名
 
+# 必需命令列表
+REQUIRED_COMMANDS="ps awk grep kill logger tee date tr"
+
 # ========== 日志函数 ==========
 log() {
     local level=$1
@@ -20,6 +23,39 @@ log() {
     timestamp=$(date '+%Y-%m-%d %H:%M:%S')
     echo "[$timestamp] [$level] $msg" | tee -a "$LOG_FILE"
     logger -t "zombie_cleaner" "[$level] $msg" 2>/dev/null
+}
+
+# ========== 依赖检查 ==========
+check_dependencies() {
+    local missing=()
+    
+    for cmd in $REQUIRED_COMMANDS; do
+        if ! command -v "$cmd" &>/dev/null; then
+            missing+=("$cmd")
+        fi
+    done
+    
+    if [[ ${#missing[@]} -gt 0 ]]; then
+        echo "错误：缺少必需命令: ${missing[*]}"
+        echo "请安装相应的软件包后重试"
+        exit 1
+    fi
+}
+
+# ========== 兼容性检查 ==========
+check_compatibility() {
+    # 检查 Bash 版本 (需要 4.0+ 以支持关联数组)
+    local bash_major="${BASH_VERSION%%.*}"
+    if [[ $bash_major -lt 4 ]]; then
+        echo "错误：Bash 版本过低 (当前: $BASH_VERSION)"
+        echo "此脚本需要 Bash 4.0 或更高版本"
+        exit 1
+    fi
+    
+    # 检查操作系统
+    if [[ ! -f /proc/version ]]; then
+        echo "警告：无法检测操作系统信息"
+    fi
 }
 
 # ========== 权限检查 ==========
@@ -160,6 +196,8 @@ main() {
 }
 
 # ========== 执行主逻辑 ==========
+check_dependencies
+check_compatibility
 main
 
 exit 0
