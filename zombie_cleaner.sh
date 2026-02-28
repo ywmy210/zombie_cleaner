@@ -122,8 +122,7 @@ main() {
             log "INFO" "已发送 SIGTERM 到 PID $ppid"
             
             # 等待 5 秒观察是否退出
-        local j
-        for j in {1..5}; do
+            for _ in {1..5}; do
                 if ! kill -0 "$ppid" 2>/dev/null; then
                     log "SUCCESS" "父进程 PID $ppid 已退出，其僵尸进程将被 systemd 回收"
                     continue 2
