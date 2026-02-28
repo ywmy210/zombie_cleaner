@@ -1,5 +1,9 @@
 # Zombie Cleaner - 僵尸进程自动检测与清理脚本
 
+[![Test](https://github.com/ywmy210/zombie_cleaner/actions/workflows/test.yml/badge.svg)](https://github.com/ywmy210/zombie_cleaner/actions/workflows/test.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Shell Script](https://img.shields.io/badge/Shell-Bash-green.svg)](https://www.gnu.org/software/bash/)
+
 一个用于 Linux 系统的僵尸进程自动检测与清理工具。当僵尸进程数量超过设定阈值时，自动终止其父进程以清理僵尸进程。
 
 ## 功能特性
