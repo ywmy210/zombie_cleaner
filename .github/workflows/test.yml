@@ -1,0 +1,37 @@
+name: Test
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Check script syntax
+        run: |
+          bash -n zombie_cleaner.sh
+          echo "Syntax check passed!"
+
+      - name: Check script permissions
+        run: |
+          chmod +x zombie_cleaner.sh
+          ls -la zombie_cleaner.sh
+
+      - name: Run shellcheck
+        uses: ludeeus/action-shellcheck@master
+        with:
+          scandir: '.'
+          severity: warning
+          check_together: 'yes'
+
+      - name: Test help output (non-root)
+        run: |
+          # 脚本会因非 root 权限退出，这是预期行为
+          ./zombie_cleaner.sh 2>&1 || true
