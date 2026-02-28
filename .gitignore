@@ -4,6 +4,10 @@
 # Log files
 *.log
 
+# Test artifacts
+test_logs/
+performance_results.txt
+
 # Editor/IDE
 .idea/
 .vscode/
