@@ -130,6 +130,27 @@ ps aux | awk '$8 ~ /Z/'
 ps -eo pid,ppid,stat,cmd | grep '^Z'
 ```
 
+## 目录结构
+
+```
+zombie_cleaner/
+├── .github/
+│   ├── CODEOWNERS              # 代码所有者配置
+│   ├── PULL_REQUEST_TEMPLATE.md # PR 模板
+│   ├── ISSUE_TEMPLATE/
+│   │   ├── bug_report.md       # Bug 报告模板
+│   │   └── feature_request.md  # 功能请求模板
+│   └── workflows/
+│       ├── test.yml            # 自动测试工作流
+│       └── release.yml         # 版本发布工作流
+├── .gitignore                  # Git 忽略文件
+├── CONTRIBUTING.md             # 贡献指南
+├── LICENSE                     # MIT 许可证
+├── README.md                   # 项目说明
+├── SECURITY.md                 # 安全策略
+└── zombie_cleaner.sh           # 主脚本
+```
+
 ## License
 
 MIT License
