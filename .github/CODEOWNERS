@@ -1,0 +1,14 @@
+# CODEOWNERS - 代码所有者配置
+# https://docs.github.com/zh/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+
+# 默认所有者 - 对整个仓库拥有审查权限
+* @ywmy210
+
+# Shell 脚本文件
+*.sh @ywmy210
+
+# 工作流文件
+/.github/workflows/ @ywmy210
+
+# 文档文件
+*.md @ywmy210
